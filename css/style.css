@@ -1,0 +1,32 @@
+.laby {
+  background-color: #000000;
+}
+
+.laby circle.background {
+  fill: #000000;
+}
+
+.laby .button {
+  fill: pink;
+  cursor: pointer;
+}
+
+.laby text {
+  fill: gray;
+  font: 11px sans-serif;
+  text-anchor: end;
+  font-weight: bold;
+}
+
+.laby .cell-onpath circle.background {
+  fill: yellow;
+}
+
+.laby line.wall {
+  stroke: blue;
+  stroke-width: 5;
+}
+
+svg.laby {
+  border: 1px solid gray;
+}

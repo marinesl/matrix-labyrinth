@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        <title>D3.js Maze</title>
+        <meta name="description" content="">
+        <script src="https://d3js.org/d3.v3.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+    </head>
+
+    <body>
+
+      <div style="text-align: center">
+        <svg class="laby" width="500" height="500"></svg>
+        <p style="text-align: center">
+          <input class="btn-random" type="button" name="random" value="Randomize"/>
+        </p>
+      </div>
+
+        <script src="js/matrix.js"></script>
+        <script src="js/maze.js"></script>
+
+        <script>
+            // build labyrinth
+
+            let maze = new Maze(3, 3)
+            maze.randomize()
+            // let maze = new Board(3, 3)
+            // maze.toggle('A1', 'E')
+            // maze.toggle('B1', 'E', 'S')
+            // maze.toggle('C1', 'S')
+            // maze.toggle('A2', 'E', 'S')
+            // maze.toggle('B2', 'E')
+            // maze.toggle('A3', 'E')
+            // maze.toggle('B3', 'E')
+
+            let svg = d3.select('.laby')
+            let width = svg.attr('width')
+            let height = svg.attr('height')
+
+            let x = d3.scale.linear().domain([0, maze.width]).range([0, width])
+            let y = d3.scale.linear().domain([0, maze.height]).range([0, height])
+            d3.selectAll("input.btn-random").on('click', function (x) {
+              // Determine if current line is visible
+              maze.randomize()
+              draw(maze)
+            })
+            function draw (maze) {
+              d3.selectAll(".laby g").remove()
+              let path = maze.pathes(maze.labels[0], maze.labels[maze.labels.length-1]).sort((x, y) => x.length - y.length)[0]
+
+              let data = maze.toJSON().cells
+
+              let allCells = svg.selectAll('g')
+                  .data(data)
+
+              let cell = allCells.enter().append('g')
+                  .attr('class', function (c) { return 'cell ' + (path && (path.indexOf(c.label) !== -1) ? 'cell-onpath' : 'cell-offpath') })
+                  .attr('transform', function (c, i) { return 'translate(' + x(c.x) + ',' + y(c.y) + ')' })
+
+              // walls
+              allCells.selectAll('g.cell')
+                  .data(function (d) { return d.walls })
+                .enter().append('line').filter(function (d, i) { return d.present })
+                  .attr('class', function (c) { return 'wall wall-' + c.direction })
+                  .attr('x1', function (c) { return c.x ? x((1 + c.x) / 2) : 0 })
+                  .attr('y1', function (c) { return c.y ? y((1 + c.y) / 2) : 0 })
+                  .attr('x2', function (c) { return c.x ? x((1 + c.x) / 2) : x(1) })
+                  .attr('y2', function (c) { return c.y ? y((1 + c.y) / 2) : y(1) })
+
+              // cells
+              cell.append('circle')
+                .attr('class', 'background')
+                .attr('cx', x(0.5))
+                .attr('cy', x(0.5))
+                .attr('r', 7)
+              cell.append('text').filter (function (c) { return !path || (path.indexOf(c.label) === -1) })
+                .attr('text-anchor', 'middle' )
+                .attr('x', function (c) { return x(0.6) })
+                .attr('y', function (c) { return y(0.5) })
+                .attr('dy', '.35em')
+                .text(function (c) { return c.label })
+
+              // buttons
+              allCells.selectAll('g.cell')
+                  .data(function (d) { return d.walls })
+                .enter().append('rect').filter(function (d, i) { return d.selectable })
+                  .attr('class', function (c) { return 'button button-' + c.direction })
+                  .attr('x', function (c) { return c.x ? x((1 + c.x) / 4) - 7 : x(0.5) - 4 })
+                  .attr('y', function (c) { return c.y ? y((1 + c.y) / 4) - 7 : y(0.5) - 4 })
+                  .attr('width', 15)
+                  .attr('height', 15)
+                  .attr('fill-opacity', 0.25)
+                  .on('click', function (x) {
+                    // Determine if current line is visible
+                    maze.toggle(x.label, x.direction)
+                    draw(maze)
+                  })
+            }
+            draw(maze)
+
+        </script>
+    </body>
+
+</html>
